@@ -8,6 +8,33 @@ import de.lego.gottfried.decdat.decompiler.Decompiler;
 public class DatSymbol {
 	public static int cID = 0;
 
+	/*
+	version 1
+	public int b_hasName;
+	public String name;
+	
+	public int ele;
+	public int type;
+	public int flags;
+	public int space;
+
+	public int next;
+	public int dataAdr;
+	
+	public int offset;
+	
+	public int filenr;
+	public int line;
+	public int line_anz;
+	public int pos_beg;
+	public int pos_anz;
+	
+	public int parent;
+	*/
+ 
+	/*
+	version 2
+	*/
 	public Dat thedat;
 	public int id;
 	public int b_hasName;
@@ -64,20 +91,50 @@ public class DatSymbol {
 		id = cID++;
 		b_hasName = s.ReadInt();
 		name = s.ReadString();
-		nameLo = name.toLowerCase();
-		offset = s.ReadInt();
-		bitfield = s.ReadInt();
-		filenr = s.ReadInt();
-		filenr = filenr & 0x7FFFF; // 19 bits
-		line = s.ReadInt();
-		line = line & 0x7FFFF; // 19 bits
-		line_anz = s.ReadInt();
-		line_anz = line_anz & 0x7FFFF; // 19 bits
-		pos_beg = s.ReadInt();
-		pos_beg = pos_beg & 0xFFFFFF; // 24 bits
-		pos_anz = s.ReadInt();
-		pos_anz = pos_anz & 0xFFFFFF; // 24 bits
+		
+		//Version 1
+		if (dat.Version == 49)	
+		{
+			int ele = s.ReadInt();
+			int type = s.ReadInt();
+			int flags = s.ReadInt();
+			int space = s.ReadInt();
 
+			@SuppressWarnings("unused")
+			int next = s.ReadInt();
+			@SuppressWarnings("unused")
+			int dataAdr = s.ReadInt();
+
+			offset = s.ReadInt();
+
+			filenr = s.ReadInt();
+			line = s.ReadInt();
+			line_anz = s.ReadInt();
+			pos_beg = s.ReadInt();
+			pos_anz = s.ReadInt();
+			
+			//Convert ele, type, flags and space to Version 2 bitfield
+			bitfield = (((ele << 0) & bitfield_ele) | ((type << 12) & bitfield_type) | ((flags << 16) & bitfield_flags) | (space << 23));
+		};
+
+		//Version 2
+		if (dat.Version == 50)
+		{
+			offset = s.ReadInt();
+			bitfield = s.ReadInt();
+			filenr = s.ReadInt();
+			filenr = filenr & 0x7FFFF; // 19 bits
+			line = s.ReadInt();
+			line = line & 0x7FFFF; // 19 bits
+			line_anz = s.ReadInt();
+			line_anz = line_anz & 0x7FFFF; // 19 bits
+			pos_beg = s.ReadInt();
+			pos_beg = pos_beg & 0xFFFFFF; // 24 bits
+			pos_anz = s.ReadInt();
+			pos_anz = pos_anz & 0xFFFFFF; // 24 bits
+		};
+
+		nameLo = name.toLowerCase();
 		isLocal = name.contains(".");
 
 		if ((flags() & Flag.Classvar) == 0) {
